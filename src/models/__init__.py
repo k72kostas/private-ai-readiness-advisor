@@ -1,3 +1,5 @@
+"""Public data-model interface for PARA-GIP."""
+
 from .assessment import (
     Assessment,
     AssessmentResponse,
@@ -11,6 +13,34 @@ from .assessment import (
     TargetStage,
 )
 
+from .use_case import (
+    AcceptabilityStatus,
+    ComplexityAssessment,
+    ComplexityFactor,
+    ComplexityLevel,
+    MetricDirection,
+    PilotBoundary,
+    PilotSuitability,
+    SuccessMetric,
+    UseCase,
+    UseCaseCategory,
+)
+
+from .workload import (
+    ActivityType,
+    AvailabilityTarget,
+    BenchmarkEvidence,
+    BenchmarkStatus,
+    ModelLicenseStatus,
+    ModelProfile,
+    PerformanceTargets,
+    PrecisionType,
+    RAGUsage,
+    ServingPattern,
+    WorkloadProfile,
+)
+
+
 __all__ = [
     "Assessment",
     "AssessmentResponse",
@@ -22,4 +52,25 @@ __all__ = [
     "EvidenceType",
     "OrganizationProfile",
     "TargetStage",
+    "AcceptabilityStatus",
+    "ComplexityAssessment",
+    "ComplexityFactor",
+    "ComplexityLevel",
+    "MetricDirection",
+    "PilotBoundary",
+    "PilotSuitability",
+    "SuccessMetric",
+    "UseCase",
+    "UseCaseCategory",
+    "ActivityType",
+    "AvailabilityTarget",
+    "BenchmarkEvidence",
+    "BenchmarkStatus",
+    "ModelLicenseStatus",
+    "ModelProfile",
+    "PerformanceTargets",
+    "PrecisionType",
+    "RAGUsage",
+    "ServingPattern",
+    "WorkloadProfile",
 ]
