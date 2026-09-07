@@ -1,0 +1,98 @@
+schema_version: "1.0"
+rule_set_version: "1.0"
+rule_set_name: "PARA-GIP Evidence Confidence Rules"
+
+description: >
+  Deterministic rules for evaluating the completeness, quality,
+  recency, relevance, and review status of assessment evidence.
+  Evidence Confidence is calculated independently from readiness.
+
+dependencies:
+  assessment_catalog: "assessment_questions.yaml"
+
+confidence_levels:
+  - id: "EVIDENCE-LOW"
+    name: "Low"
+    minimum_score: 0
+    maximum_score: 39.9999
+
+  - id: "EVIDENCE-MEDIUM"
+    name: "Medium"
+    minimum_score: 40
+    maximum_score: 74.9999
+
+  - id: "EVIDENCE-HIGH"
+    name: "High"
+    minimum_score: 75
+    maximum_score: 100
+
+evidence_status_credits:
+  none: 0
+  self_declared: 25
+  partially_supported: 50
+  documented: 75
+  reviewed: 100
+
+evaluation_dimensions:
+  - id: "presence"
+    name: "Evidence presence"
+    weight: 30
+
+  - id: "type"
+    name: "Evidence type"
+    weight: 20
+
+  - id: "recency"
+    name: "Evidence recency"
+    weight: 15
+
+  - id: "relevance"
+    name: "Evidence relevance"
+    weight: 20
+
+  - id: "review_status"
+    name: "Evidence review status"
+    weight: 15
+
+calculation:
+  rule_id: "EC-CALC-001"
+  formula: >
+    weighted_sum(evaluation_dimensions)
+  score_range:
+    minimum: 0
+    maximum: 100
+
+high_maturity_without_evidence:
+  rule_id: "EC-WARNING-001"
+  maturity_levels: [3, 4]
+  evidence_statuses:
+    - "none"
+    - "self_declared"
+  action: "highlight"
+  message: >
+    A high maturity response has insufficient supporting evidence.
+
+output:
+  include:
+    - "confidence_level"
+    - "confidence_score"
+    - "reasons"
+    - "missing_evidence"
+    - "highlighted_responses"
+    - "applied_rule_ids"
+    - "rule_set_version"
+
+separation_rules:
+  modify_readiness_score: false
+  modify_readiness_classification: false
+  modify_critical_stops: false
+
+privacy:
+  confidential_document_upload_required: false
+  store_evidence_metadata_only: true
+
+validation:
+  require_supported_evidence_status: true
+  reject_unknown_question_ids: true
+  verify_dimension_weights_total: 100
+  require_reason_for_confidence_level: true
