@@ -1,0 +1,165 @@
+schema_version: "1.0"
+rule_set_version: "1.0"
+rule_set_name: "PARA-GIP Critical Stop and Governance Rules"
+
+description: >
+  Deterministic deployment-blocking rules for the PARA-GIP
+  Critical Stop and Governance Engine. Triggered rules preserve
+  the numerical readiness score while changing decision status.
+
+dependencies:
+  assessment_catalog: "assessment_questions.yaml"
+  scoring_rules: "scoring_rules.yaml"
+
+evaluation:
+  preserve_numerical_score: true
+  blocking_decision_status: "Deployment Blocked"
+  evaluate_before_decision_engine: true
+  include_rule_ids_in_output: true
+  include_corrective_actions_in_output: true
+
+severity_levels:
+  - "blocking"
+
+rules:
+  - rule_id: "CS-NO-DEFINED-USE-CASE"
+    name: "No defined use case"
+    severity: "blocking"
+    source_questions: ["BV2"]
+    trigger:
+      operator: "maturity_level_equals"
+      value: 0
+    rationale: >
+      A Private AI initiative cannot proceed without a defined,
+      bounded, and pilot-suitable use case.
+    corrective_action: >
+      Define and approve a bounded first use case with clear scope,
+      intended users, and pilot boundaries.
+
+  - rule_id: "CS-NO-ACCOUNTABLE-OWNER"
+    name: "No accountable owner"
+    severity: "blocking"
+    source_questions: ["BV5", "GV1"]
+    trigger:
+      operator: "any_maturity_level_equals"
+      value: 0
+    rationale: >
+      The initiative requires accountable business and governance ownership.
+    corrective_action: >
+      Assign an accountable sponsor, use-case owner, technical owner,
+      risk owner, and approver as applicable.
+
+  - rule_id: "CS-DATA-BOUNDARY-NOT-APPROVED"
+    name: "Restricted data without an approved processing boundary"
+    severity: "blocking"
+    source_questions: ["DR3"]
+    conditions:
+      - field: "organization_profile.data_sensitivity"
+        operator: "in"
+        values: ["confidential", "restricted"]
+    trigger:
+      operator: "maturity_level_below"
+      value: 3
+    rationale: >
+      Confidential or restricted data must not be processed without an
+      approved classification, permitted-use decision, and processing boundary.
+    corrective_action: >
+      Complete data classification and obtain approval for permitted use
+      and the intended processing boundary.
+
+  - rule_id: "CS-NO-ACCESS-CONTROL-DESIGN"
+    name: "No authentication or access-control design"
+    severity: "blocking"
+    source_questions: ["SP1"]
+    trigger:
+      operator: "maturity_level_equals"
+      value: 0
+    rationale: >
+      Private AI deployment requires defined authentication,
+      authorization, and privileged-access controls.
+    corrective_action: >
+      Define and approve the authentication, authorization,
+      and privileged-access control model.
+
+  - rule_id: "CS-UNKNOWN-MODEL-OR-DATA-LICENSE"
+    name: "Unknown model or data license"
+    severity: "blocking"
+    source_questions: ["GV3", "GP1"]
+    trigger:
+      operator: "any_maturity_level_equals"
+      value: 0
+    rationale: >
+      Model and data licensing must be known before implementation decisions.
+    corrective_action: >
+      Document and review model, data, and relevant third-party licences
+      for the intended use and deployment boundary.
+
+  - rule_id: "CS-NO-HUMAN-OVERSIGHT"
+    name: "No human oversight for consequential output"
+    severity: "blocking"
+    source_questions: ["GV4"]
+    conditions:
+      - field: "use_case.consequential_output"
+        operator: "equals"
+        value: true
+    trigger:
+      operator: "maturity_level_below"
+      value: 3
+    rationale: >
+      Consequential AI output requires defined human oversight,
+      escalation, and acceptable-use controls.
+    corrective_action: >
+      Define human review points, escalation procedures,
+      and acceptable-use boundaries.
+
+  - rule_id: "CS-NO-PRODUCTION-BENCHMARK"
+    name: "No benchmark evidence for a claimed production design"
+    severity: "blocking"
+    source_questions: ["GP5"]
+    conditions:
+      - field: "assessment.target_stage"
+        operator: "equals"
+        value: "production_assessment"
+    trigger:
+      operator: "maturity_level_below"
+      value: 3
+    rationale: >
+      Production-design claims require measured benchmark and utilisation evidence.
+    corrective_action: >
+      Run a controlled benchmark and capture latency, throughput,
+      capacity, and GPU-utilisation evidence.
+
+  - rule_id: "CS-PROHIBITED-OR-UNACCEPTABLE-USE"
+    name: "Prohibited or unacceptable use"
+    severity: "blocking"
+    source_questions: []
+    conditions:
+      - field: "use_case.acceptability_status"
+        operator: "equals"
+        value: "prohibited"
+    trigger:
+      operator: "condition_match"
+    rationale: >
+      A prohibited or organizationally unacceptable use must not proceed.
+    corrective_action: >
+      Stop the proposed use case and select an acceptable alternative
+      before continuing the assessment.
+
+output:
+  include:
+    - "triggered"
+    - "rule_id"
+    - "name"
+    - "severity"
+    - "source_questions"
+    - "rationale"
+    - "corrective_action"
+    - "blocking_decision_status"
+    - "rule_set_version"
+
+validation:
+  reject_duplicate_rule_ids: true
+  reject_unknown_question_ids: true
+  require_rationale: true
+  require_corrective_action: true
+  require_blocking_severity: true
