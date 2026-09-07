@@ -1,0 +1,318 @@
+schema_version: "1.0"
+catalog_version: "1.0"
+catalog_name: "PARA-GIP Private AI Readiness Assessment"
+domain_count: 7
+question_count: 35
+total_points: 100
+
+description: >
+  Configuration-driven assessment catalog for the PARA-GIP
+  Private AI Readiness Assessment module.
+
+scoring:
+  response_type: "maturity_level"
+  maturity_levels:
+    - level: 0
+      label: "Not started or unknown"
+      credit_percentage: 0
+    - level: 1
+      label: "Informal or discussed"
+      credit_percentage: 25
+    - level: 2
+      label: "Partially defined"
+      credit_percentage: 50
+    - level: 3
+      label: "Implemented for the pilot"
+      credit_percentage: 75
+    - level: 4
+      label: "Documented, measured, and repeatable"
+      credit_percentage: 100
+
+evidence:
+  supported_statuses:
+    - "none"
+    - "self_declared"
+    - "partially_supported"
+    - "documented"
+    - "reviewed"
+  note_required_for_levels: [3, 4]
+  confidential_document_upload_required: false
+
+domains:
+  - id: "BV"
+    name: "Business Value & Use Case"
+    weight: 15
+    display_order: 1
+    primary_question: "Is the problem valuable, bounded, owned, and measurable?"
+    questions:
+      - id: "BV1"
+        text: "Is the business problem clearly documented?"
+        max_points: 3
+        required: true
+        critical_gate: false
+        evidence_examples: ["Written problem statement", "Current-process description", "Documented business need"]
+      - id: "BV2"
+        text: "Is the first use case narrowly defined and suitable for a pilot?"
+        max_points: 3
+        required: true
+        critical_gate: true
+        critical_stop_rule: "CS-NO-DEFINED-USE-CASE"
+        evidence_examples: ["Approved use-case description", "Pilot scope", "Documented use-case boundaries"]
+      - id: "BV3"
+        text: "Are users, process owners, and beneficiaries identified?"
+        max_points: 3
+        required: true
+        critical_gate: false
+        evidence_examples: ["Stakeholder list", "User-group definition", "Process-owner assignment"]
+      - id: "BV4"
+        text: "Are measurable success criteria and a baseline defined?"
+        max_points: 3
+        required: true
+        critical_gate: false
+        evidence_examples: ["Baseline measurement", "Defined KPIs", "Pilot acceptance criteria"]
+      - id: "BV5"
+        text: "Is there an accountable business sponsor and use-case owner?"
+        max_points: 3
+        required: true
+        critical_gate: true
+        critical_stop_rule: "CS-NO-ACCOUNTABLE-OWNER"
+        evidence_examples: ["Named business sponsor", "Named use-case owner", "Responsibility assignment"]
+
+  - id: "DR"
+    name: "Data Readiness"
+    weight: 15
+    display_order: 2
+    primary_question: "Is the required data usable, governed, accessible, and permitted?"
+    questions:
+      - id: "DR1"
+        text: "Are the required data sources identified and owned?"
+        max_points: 3
+        required: true
+        critical_gate: false
+        evidence_examples: ["Data inventory", "Named data owners", "Source-system list"]
+      - id: "DR2"
+        text: "Is data quality evaluated for the intended use case?"
+        max_points: 3
+        required: true
+        critical_gate: false
+        evidence_examples: ["Data-quality profile", "Completeness assessment", "Known data-gap register"]
+      - id: "DR3"
+        text: "Are classification, sensitivity, and permitted-use rules documented?"
+        max_points: 3
+        required: true
+        critical_gate: true
+        critical_stop_rule: "CS-DATA-BOUNDARY-NOT-APPROVED"
+        gate_condition:
+          field: "organization_profile.data_sensitivity"
+          operator: "in"
+          values: ["confidential", "restricted"]
+        evidence_examples: ["Data classification", "Permitted-use decision", "Processing-boundary approval"]
+      - id: "DR4"
+        text: "Can the pilot access the data through an approved and repeatable method?"
+        max_points: 3
+        required: true
+        critical_gate: false
+        evidence_examples: ["Access approval", "Documented access method", "Repeatable ingestion procedure"]
+      - id: "DR5"
+        text: "Are provenance, retention, deletion, and update requirements defined?"
+        max_points: 3
+        required: true
+        critical_gate: false
+        evidence_examples: ["Data-provenance record", "Retention policy", "Deletion procedure", "Refresh schedule"]
+
+  - id: "SP"
+    name: "Security, Privacy & Compliance"
+    weight: 15
+    display_order: 3
+    primary_question: "Can the workload operate within acceptable risk boundaries?"
+    questions:
+      - id: "SP1"
+        text: "Are authentication, authorization, and privileged-access controls defined?"
+        max_points: 3
+        required: true
+        critical_gate: true
+        critical_stop_rule: "CS-NO-ACCESS-CONTROL-DESIGN"
+        evidence_examples: ["Authentication design", "Authorization model", "Privileged-access controls"]
+      - id: "SP2"
+        text: "Are encryption, secrets management, and network boundaries defined?"
+        max_points: 3
+        required: true
+        critical_gate: false
+        evidence_examples: ["Encryption requirements", "Secrets-management design", "Network-boundary diagram"]
+      - id: "SP3"
+        text: "Have privacy and regulatory obligations been identified?"
+        max_points: 3
+        required: true
+        critical_gate: true
+        gate_condition:
+          field: "organization_profile.data_sensitivity"
+          operator: "in"
+          values: ["confidential", "restricted"]
+        evidence_examples: ["Privacy assessment", "Regulatory-requirements register", "Compliance-boundary decision"]
+      - id: "SP4"
+        text: "Has an AI-specific threat assessment been completed?"
+        max_points: 3
+        required: true
+        critical_gate: false
+        evidence_examples: ["AI threat model", "Prompt-injection assessment", "Supply-chain risk assessment"]
+      - id: "SP5"
+        text: "Are logging, audit, incident-response, and vulnerability processes defined?"
+        max_points: 3
+        required: true
+        critical_gate: false
+        evidence_examples: ["Logging requirements", "Audit procedure", "Incident-response process", "Vulnerability-management process"]
+
+  - id: "GV"
+    name: "Governance & Responsible AI"
+    weight: 15
+    display_order: 4
+    primary_question: "Are accountability, oversight, and controls defined?"
+    questions:
+      - id: "GV1"
+        text: "Are an accountable owner, technical owner, risk owner, and approver assigned?"
+        max_points: 3
+        required: true
+        critical_gate: true
+        critical_stop_rule: "CS-NO-ACCOUNTABLE-OWNER"
+        evidence_examples: ["RACI matrix", "Named technical owner", "Named risk owner", "Named approver"]
+      - id: "GV2"
+        text: "Is the use case recorded in an AI inventory with its purpose and boundaries?"
+        max_points: 3
+        required: true
+        critical_gate: false
+        evidence_examples: ["AI inventory entry", "AI system card", "Documented use boundaries"]
+      - id: "GV3"
+        text: "Are model, data, licensing, third-party, and lifecycle risks reviewed?"
+        max_points: 3
+        required: true
+        critical_gate: true
+        critical_stop_rule: "CS-UNKNOWN-MODEL-OR-DATA-LICENSE"
+        evidence_examples: ["Model-license review", "Data-license review", "Third-party risk assessment", "Lifecycle risk register"]
+      - id: "GV4"
+        text: "Are human oversight, escalation, and acceptable-use rules defined?"
+        max_points: 3
+        required: true
+        critical_gate: true
+        critical_stop_rule: "CS-NO-HUMAN-OVERSIGHT"
+        evidence_examples: ["Human-approval points", "Escalation procedure", "Acceptable-use policy"]
+      - id: "GV5"
+        text: "Are quality, safety, fairness, transparency, and monitoring requirements documented?"
+        max_points: 3
+        required: true
+        critical_gate: false
+        evidence_examples: ["Model-evaluation plan", "Quality thresholds", "Safety requirements", "Monitoring requirements"]
+
+  - id: "IP"
+    name: "Infrastructure & Platform Readiness"
+    weight: 15
+    display_order: 5
+    primary_question: "Can the organization host and operate the platform?"
+    questions:
+      - id: "IP1"
+        text: "Is the target deployment model selected and justified?"
+        max_points: 3
+        required: true
+        critical_gate: false
+        evidence_examples: ["Deployment-model decision", "Architecture option analysis", "Deployment-boundary description"]
+      - id: "IP2"
+        text: "Are compute, storage, network, power, cooling, and capacity constraints known?"
+        max_points: 3
+        required: true
+        critical_gate: false
+        evidence_examples: ["Capacity inventory", "Infrastructure assessment", "Power and cooling assessment"]
+      - id: "IP3"
+        text: "Is the container, virtualization, or orchestration platform ready?"
+        max_points: 3
+        required: true
+        critical_gate: false
+        evidence_examples: ["Platform-readiness assessment", "Container-platform configuration", "Virtualization-platform inventory"]
+      - id: "IP4"
+        text: "Are availability, backup, recovery, patching, and support requirements defined?"
+        max_points: 3
+        required: true
+        critical_gate: true
+        gate_scope: "production_assessment"
+        evidence_examples: ["Availability requirements", "Backup and recovery plan", "Patching procedure", "Support model"]
+      - id: "IP5"
+        text: "Are observability, performance, capacity, and cost controls available?"
+        max_points: 3
+        required: true
+        critical_gate: false
+        evidence_examples: ["Monitoring design", "Performance metrics", "Capacity thresholds", "Cost-control process"]
+
+  - id: "GP"
+    name: "GPU & Workload Readiness"
+    weight: 15
+    display_order: 6
+    primary_question: "Are workload assumptions sufficient for responsible GPU planning?"
+    questions:
+      - id: "GP1"
+        text: "Are the use-case type, model candidates, and model licenses identified?"
+        max_points: 3
+        required: true
+        critical_gate: true
+        critical_stop_rule: "CS-UNKNOWN-MODEL-OR-DATA-LICENSE"
+        evidence_examples: ["Model-candidate list", "Model-license review", "Use-case workload classification"]
+      - id: "GP2"
+        text: "Are context length, input size, output size, and quality targets defined?"
+        max_points: 3
+        required: true
+        critical_gate: false
+        evidence_examples: ["Context-length assumption", "Input and output token estimates", "Quality targets"]
+      - id: "GP3"
+        text: "Are concurrency, latency, throughput, and availability targets defined?"
+        max_points: 3
+        required: true
+        critical_gate: false
+        evidence_examples: ["Concurrency estimate", "Latency objective", "Throughput objective", "Availability target"]
+      - id: "GP4"
+        text: "Have VRAM, quantization, batching, and GPU-sharing assumptions been documented?"
+        max_points: 3
+        required: true
+        critical_gate: false
+        evidence_examples: ["VRAM assumption", "Quantization choice", "Batching assumption", "GPU-sharing design"]
+      - id: "GP5"
+        text: "Is there a benchmark and utilization-measurement plan?"
+        max_points: 3
+        required: true
+        critical_gate: true
+        gate_scope: "production_assessment"
+        critical_stop_rule: "CS-NO-PRODUCTION-BENCHMARK"
+        evidence_examples: ["Benchmark plan", "Utilization-measurement plan", "Capacity-test criteria", "Performance acceptance criteria"]
+
+  - id: "PO"
+    name: "People, Skills & Operations"
+    weight: 10
+    display_order: 7
+    primary_question: "Can the organization build, support, and improve the service?"
+    questions:
+      - id: "PO1"
+        text: "Are the required business, data, security, AI, and infrastructure roles assigned?"
+        max_points: 2
+        required: true
+        critical_gate: false
+        evidence_examples: ["Role-assignment matrix", "Named delivery team", "Named operational owners"]
+      - id: "PO2"
+        text: "Do assigned staff have suitable AI and platform literacy?"
+        max_points: 2
+        required: true
+        critical_gate: false
+        evidence_examples: ["Training records", "Skills assessment", "Relevant delivery experience"]
+      - id: "PO3"
+        text: "Are deployment, monitoring, incident, patching, and support procedures defined?"
+        max_points: 2
+        required: true
+        critical_gate: false
+        evidence_examples: ["Deployment procedure", "Monitoring runbook", "Incident procedure", "Support documentation"]
+      - id: "PO4"
+        text: "Is there a user-adoption, training, and feedback plan?"
+        max_points: 2
+        required: true
+        critical_gate: false
+        evidence_examples: ["User-training plan", "Adoption plan", "Feedback process"]
+      - id: "PO5"
+        text: "Are ownership, funding, support, and continuous-improvement responsibilities sustainable?"
+        max_points: 2
+        required: true
+        critical_gate: false
+        evidence_examples: ["Funding commitment", "Operating-model document", "Continuous-improvement ownership"]
