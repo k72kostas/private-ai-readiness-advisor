@@ -40,6 +40,25 @@ from .workload import (
     WorkloadProfile,
 )
 
+from .results import (
+    ClassificationCap,
+    ConfidenceLevel,
+    ConfidenceResult,
+    CriticalFinding,
+    CriticalSeverity,
+    DecisionResult,
+    DecisionStatus,
+    DomainScore,
+    GPUPlanningResult,
+    QuestionScore,
+    ReadinessClassification,
+    ReportSnapshot,
+    RoadmapAction,
+    RoadmapHorizon,
+    RoadmapPriority,
+    RoadmapResult,
+    ScoreResult,
+)
 
 __all__ = [
     "Assessment",
@@ -73,4 +92,21 @@ __all__ = [
     "RAGUsage",
     "ServingPattern",
     "WorkloadProfile",
+    "ClassificationCap",
+    "ConfidenceLevel",
+    "ConfidenceResult",
+    "CriticalFinding",
+    "CriticalSeverity",
+    "DecisionResult",
+    "DecisionStatus",
+    "DomainScore",
+    "GPUPlanningResult",
+    "QuestionScore",
+    "ReadinessClassification",
+    "ReportSnapshot",
+    "RoadmapAction",
+    "RoadmapHorizon",
+    "RoadmapPriority",
+    "RoadmapResult",
+    "ScoreResult",
 ]
