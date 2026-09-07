@@ -1,0 +1,256 @@
+schema_version: "1.0"
+rule_set_version: "1.0"
+rule_set_name: "PARA-GIP Decision Rules"
+
+description: >
+  Deterministic rules for combining readiness classification,
+  minimum-domain safeguards, critical stops, Evidence Confidence,
+  and GPU Planning Confidence into a decision status,
+  recommended next stage, rationale, and originating rule IDs.
+
+dependencies:
+  scoring_rules: "scoring_rules.yaml"
+  critical_stop_rules: "critical_stops.yaml"
+  evidence_confidence_rules: "evidence_confidence_rules.yaml"
+  gpu_planning_rules: "gpu_planning_rules.yaml"
+
+inputs:
+  required:
+    - "readiness.overall_score"
+    - "readiness.score_band_classification"
+    - "readiness.final_classification"
+    - "readiness.applied_caps"
+    - "critical_stops.triggered_rules"
+    - "evidence_confidence.level"
+    - "gpu_planning_confidence.level"
+  optional:
+    - "governance_findings.unresolved"
+    - "assessment.target_stage"
+    - "benchmark_evidence.available"
+
+classification_vocabulary:
+  - "Discovery Required"
+  - "Foundation Required"
+  - "Ready for Controlled Prototype"
+  - "Ready for Benchmarked Pilot"
+  - "Candidate for Production Assessment"
+
+decision_status_vocabulary:
+  - id: "DECISION-DISCOVERY-REQUIRED"
+    name: "Discovery Required"
+  - id: "DECISION-FOUNDATION-REQUIRED"
+    name: "Foundation Required"
+  - id: "DECISION-CONTROLLED-PROTOTYPE"
+    name: "Ready for Controlled Prototype"
+  - id: "DECISION-BENCHMARKED-PILOT"
+    name: "Ready for Benchmarked Pilot"
+  - id: "DECISION-PRODUCTION-ASSESSMENT"
+    name: "Candidate for Production Assessment"
+  - id: "DECISION-PROCEED-CONDITIONS"
+    name: "Proceed with Conditions"
+  - id: "DECISION-GOVERNANCE-REVIEW"
+    name: "Governance Review Required"
+  - id: "DECISION-DEPLOYMENT-BLOCKED"
+    name: "Deployment Blocked"
+
+processing:
+  rule_id: "DE-PROCESS-001"
+  precedence:
+    - "critical_stop_override"
+    - "governance_review_override"
+    - "confidence_conditions"
+    - "readiness_classification_mapping"
+  preserve_numerical_score: true
+  preserve_score_band_classification: true
+  preserve_final_classification: true
+  preserve_applied_caps: true
+  preserve_originating_rule_ids: true
+
+rules:
+  - rule_id: "DE-BLOCKER-001"
+    name: "Critical stop override"
+    priority: 1
+    when:
+      critical_stops_present: true
+    decision_status: "DECISION-DEPLOYMENT-BLOCKED"
+    recommended_next_stage: "remediation"
+    rationale_template: >
+      Deployment is blocked because one or more mandatory critical-stop
+      conditions are unresolved. The numerical readiness score and
+      classification remain visible.
+
+  - rule_id: "DE-GOVERNANCE-001"
+    name: "Governance review override"
+    priority: 2
+    when:
+      critical_stops_present: false
+      unresolved_governance_findings: true
+    decision_status: "DECISION-GOVERNANCE-REVIEW"
+    recommended_next_stage: "governance_review"
+    rationale_template: >
+      Governance or security findings require review before the proposed
+      adoption stage can proceed.
+
+  - rule_id: "DE-EVIDENCE-LOW-001"
+    name: "Low Evidence Confidence condition"
+    priority: 3
+    when:
+      critical_stops_present: false
+      unresolved_governance_findings: false
+      evidence_confidence: "Low"
+      classification_in:
+        - "Ready for Controlled Prototype"
+        - "Ready for Benchmarked Pilot"
+        - "Candidate for Production Assessment"
+    decision_status: "DECISION-PROCEED-CONDITIONS"
+    recommended_next_stage: "evidence_collection"
+    rationale_template: >
+      Progress may continue only with explicit evidence-collection and
+      validation actions because Evidence Confidence is Low.
+
+  - rule_id: "DE-GPU-LOW-001"
+    name: "Low GPU Planning Confidence condition"
+    priority: 4
+    when:
+      critical_stops_present: false
+      unresolved_governance_findings: false
+      gpu_planning_confidence: "Low"
+      classification_in:
+        - "Ready for Controlled Prototype"
+        - "Ready for Benchmarked Pilot"
+        - "Candidate for Production Assessment"
+    decision_status: "DECISION-PROCEED-CONDITIONS"
+    recommended_next_stage: "workload_definition"
+    rationale_template: >
+      Progress may continue only after material workload assumptions are
+      completed and GPU planning is recalculated.
+
+  - rule_id: "DE-GPU-MEDIUM-PRODUCTION-001"
+    name: "Production assessment benchmark condition"
+    priority: 5
+    when:
+      critical_stops_present: false
+      unresolved_governance_findings: false
+      classification: "Candidate for Production Assessment"
+      gpu_planning_confidence: "Medium"
+    decision_status: "DECISION-PROCEED-CONDITIONS"
+    recommended_next_stage: "benchmark_validation"
+    rationale_template: >
+      Production assessment remains conditional until relevant benchmark
+      evidence supports High GPU Planning Confidence.
+
+  - rule_id: "DE-DISCOVERY-001"
+    name: "Discovery classification mapping"
+    priority: 10
+    when:
+      final_classification: "Discovery Required"
+    decision_status: "DECISION-DISCOVERY-REQUIRED"
+    recommended_next_stage: "discovery"
+    rationale_template: >
+      The assessment requires clearer ownership, use-case scope,
+      data boundaries, and risk definition.
+
+  - rule_id: "DE-FOUNDATION-001"
+    name: "Foundation classification mapping"
+    priority: 11
+    when:
+      final_classification: "Foundation Required"
+    decision_status: "DECISION-FOUNDATION-REQUIRED"
+    recommended_next_stage: "foundation"
+    rationale_template: >
+      Foundational governance, security, data, platform, or operating gaps
+      must be addressed before controlled technical deployment.
+
+  - rule_id: "DE-PROTOTYPE-001"
+    name: "Controlled prototype classification mapping"
+    priority: 12
+    when:
+      final_classification: "Ready for Controlled Prototype"
+      evidence_confidence_in: ["Medium", "High"]
+      gpu_planning_confidence_in: ["Medium", "High"]
+    decision_status: "DECISION-CONTROLLED-PROTOTYPE"
+    recommended_next_stage: "controlled_prototype"
+    rationale_template: >
+      The organization may prepare a controlled prototype using synthetic
+      or approved low-risk data within defined governance boundaries.
+
+  - rule_id: "DE-PILOT-001"
+    name: "Benchmarked pilot classification mapping"
+    priority: 13
+    when:
+      final_classification: "Ready for Benchmarked Pilot"
+      evidence_confidence_in: ["Medium", "High"]
+      gpu_planning_confidence_in: ["Medium", "High"]
+    decision_status: "DECISION-BENCHMARKED-PILOT"
+    recommended_next_stage: "benchmarked_pilot"
+    rationale_template: >
+      The organization may run a controlled pilot and collect measured
+      business, quality, performance, and utilization evidence.
+
+  - rule_id: "DE-PRODUCTION-ASSESSMENT-001"
+    name: "Production assessment classification mapping"
+    priority: 14
+    when:
+      final_classification: "Candidate for Production Assessment"
+      evidence_confidence: "High"
+      gpu_planning_confidence: "High"
+      benchmark_evidence_available: true
+    decision_status: "DECISION-PRODUCTION-ASSESSMENT"
+    recommended_next_stage: "formal_production_assessment"
+    rationale_template: >
+      The organization is a candidate for formal architecture, security,
+      compliance, capacity, and operational assessment. This status does
+      not authorize production rollout.
+
+conflict_resolution:
+  rule_id: "DE-CONFLICT-001"
+  strategy: "first_matching_rule_by_priority"
+  lower_number_means_higher_priority: true
+  return_all_contributing_rule_ids: true
+
+recommended_stage_vocabulary:
+  - "remediation"
+  - "governance_review"
+  - "evidence_collection"
+  - "workload_definition"
+  - "benchmark_validation"
+  - "discovery"
+  - "foundation"
+  - "controlled_prototype"
+  - "benchmarked_pilot"
+  - "formal_production_assessment"
+
+safeguards:
+  blocker_overrides_proceed_decisions: true
+  blocker_does_not_erase_score: true
+  low_confidence_requires_conditions: true
+  production_candidate_is_not_production_ready: true
+  prohibit_automatic_production_approval: true
+  require_human_approval: true
+  optional_narrative_may_modify_decision: false
+
+output:
+  include:
+    - "decision_status_id"
+    - "decision_status"
+    - "recommended_next_stage"
+    - "rationale"
+    - "overall_score"
+    - "score_band_classification"
+    - "final_classification"
+    - "applied_caps"
+    - "triggered_critical_stops"
+    - "evidence_confidence"
+    - "gpu_planning_confidence"
+    - "originating_rule_ids"
+    - "rule_set_version"
+
+validation:
+  reject_unknown_classifications: true
+  reject_unknown_decision_statuses: true
+  reject_unknown_confidence_levels: true
+  reject_duplicate_rule_ids: true
+  reject_duplicate_priorities: true
+  require_rationale: true
+  require_recommended_next_stage: true
+  require_originating_rule_ids: true
