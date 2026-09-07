@@ -1,0 +1,294 @@
+schema_version: "1.0"
+rule_set_version: "1.0"
+rule_set_name: "PARA-GIP Adoption Roadmap Rules"
+
+description: >
+  Deterministic prioritization and action-generation rules for Module 4.
+  The roadmap consumes readiness, governance, confidence, infrastructure,
+  and decision outputs and generates explainable 7-day, 30-day, and
+  90-day actions.
+
+dependencies:
+  assessment_catalog: "assessment_questions.yaml"
+  scoring_rules: "scoring_rules.yaml"
+  critical_stop_rules: "critical_stops.yaml"
+  evidence_confidence_rules: "evidence_confidence_rules.yaml"
+  gpu_planning_rules: "gpu_planning_rules.yaml"
+
+horizons:
+  - id: "HORIZON-7-DAY"
+    name: "7-Day Action Plan"
+    days: 7
+    purpose: >
+      Resolve immediate blockers, establish ownership, confirm scope,
+      and define required evidence and governance actions.
+  - id: "HORIZON-30-DAY"
+    name: "30-Day Pilot Plan"
+    days: 30
+    purpose: >
+      Prepare and execute a controlled pilot, validate infrastructure
+      assumptions, benchmark the workload, and collect user evidence.
+  - id: "HORIZON-90-DAY"
+    name: "90-Day Scale Plan"
+    days: 90
+    purpose: >
+      Review pilot outcomes and assess governance, operational,
+      capacity, support, and expansion readiness.
+
+priority_levels:
+  - id: "PRIORITY-1"
+    rank: 1
+    name: "Critical Stop Conditions"
+  - id: "PRIORITY-2"
+    rank: 2
+    name: "Governance and Security Findings"
+  - id: "PRIORITY-3"
+    rank: 3
+    name: "Lowest Readiness Domains"
+  - id: "PRIORITY-4"
+    rank: 4
+    name: "Infrastructure and GPU Planning Gaps"
+  - id: "PRIORITY-5"
+    rank: 5
+    name: "Optimization and Scaling Activities"
+
+prioritization_principles:
+  - rule_id: "RM-PRINCIPLE-001"
+    name: "Governance Before Technology"
+    description: >
+      Governance and security gaps must be addressed before infrastructure
+      expansion, optimization, or scale activities.
+  - rule_id: "RM-PRINCIPLE-002"
+    name: "Risk Before Optimization"
+    description: >
+      Blocking and high-risk findings take precedence over performance
+      and cost-optimization work.
+  - rule_id: "RM-PRINCIPLE-003"
+    name: "Evidence Before Investment"
+    description: >
+      Low-confidence findings require evidence collection and validation
+      before material investment decisions.
+  - rule_id: "RM-PRINCIPLE-004"
+    name: "Lowest Readiness Domain First"
+    description: >
+      The weakest readiness domains receive priority after blockers and
+      governance findings.
+
+processing_sequence:
+  rule_id: "RM-PROCESS-001"
+  steps:
+    - "collect_module_outputs"
+    - "collect_core_service_outputs"
+    - "generate_candidate_actions"
+    - "assign_priority_rank"
+    - "assign_roadmap_horizon"
+    - "deduplicate_actions"
+    - "enforce_rollout_safeguards"
+    - "sort_actions"
+    - "return_traceable_roadmap"
+
+roadmap_rules:
+  - rule_id: "RM-CRITICAL-STOP-001"
+    source: "critical_stops"
+    condition:
+      triggered: true
+    priority: "PRIORITY-1"
+    horizon: "HORIZON-7-DAY"
+    action_template: >
+      Resolve blocker: {name}. Complete corrective action: {corrective_action}.
+    default_owner_role: "Accountable Owner"
+    completion_criterion: >
+      The blocker is remediated, evidence is recorded, and the rule no longer triggers.
+
+  - rule_id: "RM-GOVERNANCE-001"
+    source: "governance_findings"
+    condition:
+      unresolved: true
+    priority: "PRIORITY-2"
+    horizon: "HORIZON-7-DAY"
+    action_template: >
+      Resolve governance or security finding: {finding_name}.
+    default_owner_role: "Governance or Security Owner"
+    completion_criterion: >
+      The required policy, control, approval, or ownership evidence is documented.
+
+  - rule_id: "RM-EVIDENCE-LOW-001"
+    source: "evidence_confidence"
+    condition:
+      level: "Low"
+    priority: "PRIORITY-2"
+    horizon: "HORIZON-7-DAY"
+    action_template: >
+      Collect and review missing evidence for {finding_or_domain}.
+    default_owner_role: "Assessment Owner"
+    completion_criterion: >
+      Required evidence references are recorded and Evidence Confidence is recalculated.
+
+  - rule_id: "RM-LOWEST-DOMAIN-001"
+    source: "readiness_results"
+    condition:
+      selector: "lowest_scoring_domains"
+    priority: "PRIORITY-3"
+    horizon: "HORIZON-30-DAY"
+    action_template: >
+      Improve readiness in {domain_name} by addressing {priority_gaps}.
+    default_owner_role: "Domain Owner"
+    completion_criterion: >
+      Priority gaps are remediated and the domain assessment is repeated.
+
+  - rule_id: "RM-GPU-CONFIDENCE-LOW-001"
+    source: "gpu_planning_confidence"
+    condition:
+      level: "Low"
+    priority: "PRIORITY-4"
+    horizon: "HORIZON-7-DAY"
+    action_template: >
+      Complete missing workload assumptions for responsible GPU planning.
+    default_owner_role: "AI or Infrastructure Architect"
+    completion_criterion: >
+      Material model, workload, deployment, and operational inputs are documented.
+
+  - rule_id: "RM-GPU-NO-BENCHMARK-001"
+    source: "gpu_planning_confidence"
+    condition:
+      benchmark_evidence: false
+    priority: "PRIORITY-4"
+    horizon: "HORIZON-30-DAY"
+    action_template: >
+      Execute the recommended workload benchmark and capture measured evidence.
+    default_owner_role: "AI or Infrastructure Architect"
+    completion_criterion: >
+      Latency, throughput, capacity, quality, and GPU-utilization results are recorded.
+
+  - rule_id: "RM-PILOT-VALIDATION-001"
+    source: "decision_status"
+    condition:
+      status_in:
+        - "Ready for Controlled Prototype"
+        - "Ready for Benchmarked Pilot"
+        - "Proceed with Conditions"
+    priority: "PRIORITY-4"
+    horizon: "HORIZON-30-DAY"
+    action_template: >
+      Run a controlled pilot within the approved use-case and data boundaries.
+    default_owner_role: "Pilot Owner"
+    completion_criterion: >
+      Pilot acceptance criteria, user feedback, security checks, and measurements are recorded.
+
+  - rule_id: "RM-PRODUCTION-ASSESSMENT-001"
+    source: "decision_status"
+    condition:
+      status: "Candidate for Production Assessment"
+    priority: "PRIORITY-5"
+    horizon: "HORIZON-90-DAY"
+    action_template: >
+      Perform formal architecture, security, compliance, capacity, and operational reviews.
+    default_owner_role: "Executive Sponsor and Review Owners"
+    completion_criterion: >
+      Required formal reviews are completed and an approved next decision is recorded.
+
+  - rule_id: "RM-OPTIMIZATION-001"
+    source: "decision_status"
+    condition:
+      blockers_present: false
+      governance_findings_resolved: true
+      pilot_evidence_available: true
+    priority: "PRIORITY-5"
+    horizon: "HORIZON-90-DAY"
+    action_template: >
+      Evaluate capacity, performance, cost, support, and expansion improvements.
+    default_owner_role: "Service Owner"
+    completion_criterion: >
+      Optimization proposals are measured, reviewed, and approved before implementation.
+
+classification_guidance:
+  - classification: "Discovery Required"
+    preferred_horizon: "HORIZON-7-DAY"
+    focus:
+      - "Define ownership"
+      - "Define a bounded use case"
+      - "Identify data boundaries"
+      - "Identify primary risks"
+  - classification: "Foundation Required"
+    preferred_horizon: "HORIZON-7-DAY"
+    focus:
+      - "Close governance gaps"
+      - "Define security controls"
+      - "Improve lowest readiness domains"
+  - classification: "Ready for Controlled Prototype"
+    preferred_horizon: "HORIZON-30-DAY"
+    focus:
+      - "Prepare a controlled environment"
+      - "Use synthetic or approved low-risk data"
+      - "Validate assumptions"
+  - classification: "Ready for Benchmarked Pilot"
+    preferred_horizon: "HORIZON-30-DAY"
+    focus:
+      - "Run a controlled pilot"
+      - "Collect benchmark evidence"
+      - "Measure user and technical outcomes"
+  - classification: "Candidate for Production Assessment"
+    preferred_horizon: "HORIZON-90-DAY"
+    focus:
+      - "Perform formal reviews"
+      - "Validate capacity and operations"
+      - "Prepare the next decision"
+
+deduplication:
+  rule_id: "RM-DEDUP-001"
+  key_fields:
+    - "source_rule_id"
+    - "priority"
+    - "horizon"
+    - "action"
+  merge_owner_roles: true
+  preserve_all_source_rule_ids: true
+
+sorting:
+  rule_id: "RM-SORT-001"
+  order:
+    - "priority_rank_ascending"
+    - "horizon_days_ascending"
+    - "source_rule_id_ascending"
+
+safeguards:
+  rule_id: "RM-SAFEGUARD-001"
+  critical_stops_must_be_first: true
+  governance_before_optimization: true
+  evidence_actions_when_confidence_low: true
+  benchmark_actions_when_gpu_confidence_low_or_medium: true
+  prohibit_automatic_production_rollout: true
+  production_candidate_means_assessment_only: true
+  require_human_approval: true
+  require_validation_before_investment: true
+
+required_action_fields:
+  - "action_id"
+  - "horizon"
+  - "priority"
+  - "action"
+  - "rationale"
+  - "owner_role"
+  - "completion_criterion"
+  - "source_rule_ids"
+
+output:
+  include:
+    - "priority_improvement_areas"
+    - "recommended_next_actions"
+    - "seven_day_action_plan"
+    - "thirty_day_pilot_plan"
+    - "ninety_day_scale_plan"
+    - "roadmap_rationale"
+    - "recommended_next_decision"
+    - "applied_rule_ids"
+    - "rule_set_version"
+
+validation:
+  reject_duplicate_rule_ids: true
+  reject_unknown_priority_ids: true
+  reject_unknown_horizon_ids: true
+  require_owner_role: true
+  require_completion_criterion: true
+  require_source_rule_traceability: true
+  require_non_empty_rationale: true
