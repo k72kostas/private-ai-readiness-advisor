@@ -76,7 +76,8 @@ def catalog() -> dict:
 
 
 @pytest.fixture(scope="module")
-def domains(catalog: dict) -> list"""Return the configured readiness domains."""
+def domains(catalog: dict) -> list[dict]:
+    """Return the configured readiness domains."""
 
     configured_domains = catalog.get("domains")
 
@@ -88,7 +89,8 @@ def domains(catalog: dict) -> list"""Return the configured readiness domains."""
 
 
 @pytest.fixture(scope="module")
-def questions(domains: list[dict]) -> list"""Return all questions across all domains."""
+def questions(domains: list[dict]) -> list[dict]:
+    """Return all questions across all domains."""
 
     return [
         question
