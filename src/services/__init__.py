@@ -25,6 +25,14 @@ from .roadmap import (
     RoadmapGenerationError,
     generate_roadmap,
 )
+from .reporting import (
+    ReportingError,
+    create_report_snapshot,
+    report_to_json,
+    report_to_markdown,
+    write_json_report,
+    write_markdown_report,
+)
 
 __all__ = [
     "CriticalStopEvaluationError",
@@ -40,4 +48,10 @@ __all__ = [
     "evaluate_decision",
     "RoadmapGenerationError",
     "generate_roadmap",
+    "ReportingError",
+    "create_report_snapshot",
+    "report_to_json",
+    "report_to_markdown",
+    "write_json_report",
+    "write_markdown_report",
 ]
