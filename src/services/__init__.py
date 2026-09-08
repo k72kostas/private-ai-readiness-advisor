@@ -17,6 +17,10 @@ from .gpu_planning import (
     GPUPlanningError,
     plan_gpu_infrastructure,
 )
+from .decision import (
+    DecisionEvaluationError,
+    evaluate_decision,
+)
 
 __all__ = [
     "CriticalStopEvaluationError",
@@ -28,4 +32,6 @@ __all__ = [
     "has_blocking_findings",
     "GPUPlanningError",
     "plan_gpu_infrastructure",
+    "DecisionEvaluationError",
+    "evaluate_decision",
 ]
