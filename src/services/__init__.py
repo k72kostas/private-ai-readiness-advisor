@@ -33,6 +33,13 @@ from .reporting import (
     write_json_report,
     write_markdown_report,
 )
+from .assessment_pipeline import (
+    AssessmentExportResult,
+    AssessmentPipelineError,
+    AssessmentPipelineResult,
+    export_assessment_pipeline_result,
+    run_assessment_pipeline,
+)
 
 __all__ = [
     "CriticalStopEvaluationError",
@@ -54,4 +61,9 @@ __all__ = [
     "report_to_markdown",
     "write_json_report",
     "write_markdown_report",
+    "AssessmentExportResult",
+    "AssessmentPipelineError",
+    "AssessmentPipelineResult",
+    "export_assessment_pipeline_result",
+    "run_assessment_pipeline",
 ]
