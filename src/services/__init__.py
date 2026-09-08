@@ -21,6 +21,10 @@ from .decision import (
     DecisionEvaluationError,
     evaluate_decision,
 )
+from .roadmap import (
+    RoadmapGenerationError,
+    generate_roadmap,
+)
 
 __all__ = [
     "CriticalStopEvaluationError",
@@ -34,4 +38,6 @@ __all__ = [
     "plan_gpu_infrastructure",
     "DecisionEvaluationError",
     "evaluate_decision",
+    "RoadmapGenerationError",
+    "generate_roadmap",
 ]
