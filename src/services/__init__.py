@@ -13,7 +13,10 @@ from .scoring import (
     ScoringError,
     calculate_readiness_score,
 )
-
+from .gpu_planning import (
+    GPUPlanningError,
+    plan_gpu_infrastructure,
+)
 
 __all__ = [
     "CriticalStopEvaluationError",
@@ -23,4 +26,6 @@ __all__ = [
     "calculate_readiness_score",
     "evaluate_critical_stops",
     "has_blocking_findings",
+    "GPUPlanningError",
+    "plan_gpu_infrastructure",
 ]
