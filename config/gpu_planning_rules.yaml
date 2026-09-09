@@ -1,0 +1,233 @@
+schema_version: "1.0"
+rule_set_version: "1.0"
+rule_set_name: "PARA-GIP GPU Infrastructure Planning Rules"
+
+description: >
+  Deterministic planning rules that translate declared model, workload,
+  deployment, and operational assumptions into an infrastructure tier,
+  GPU memory class, deployment pattern, and GPU Planning Confidence.
+  Outputs are planning guidance and not product recommendations or
+  performance guarantees.
+
+dependencies:
+  assessment_catalog: "assessment_questions.yaml"
+  scoring_rules: "scoring_rules.yaml"
+
+required_inputs:
+  - "model.family"
+  - "model.version"
+  - "model.parameter_count_billions"
+  - "model.license_status"
+  - "model.precision_or_quantization"
+  - "model.context_length"
+  - "workload.average_input_tokens"
+  - "workload.average_output_tokens"
+  - "workload.concurrency"
+  - "workload.latency_target_ms"
+  - "workload.throughput_target"
+  - "workload.availability_target"
+  - "workload.quality_target"
+  - "workload.rag_usage"
+  - "workload.activity_type"
+  - "workload.serving_pattern"
+  - "organization.data_sensitivity"
+  - "organization.deployment_boundary"
+
+allowed_values:
+  model_license_status:
+    - "unknown"
+    - "identified"
+    - "reviewed"
+    - "approved"
+  activity_type:
+    - "inference"
+    - "fine_tuning"
+  serving_pattern:
+    - "single_model"
+    - "multi_model"
+  rag_usage:
+    - "none"
+    - "optional"
+    - "required"
+  deployment_boundary:
+    - "on_premises"
+    - "sovereign_cloud"
+    - "private_cloud"
+    - "hybrid"
+  data_sensitivity:
+    - "public"
+    - "internal"
+    - "confidential"
+    - "restricted"
+
+infrastructure_tiers:
+  - id: "TIER-EXPLORATION"
+    name: "Exploration"
+    purpose: >
+      Early experimentation with bounded workloads and synthetic or
+      approved non-confidential data.
+  - id: "TIER-CONTROLLED-PROTOTYPE"
+    name: "Controlled Prototype"
+    purpose: >
+      Controlled technical validation with defined users, workload
+      assumptions, governance controls, and measurable success criteria.
+  - id: "TIER-BENCHMARKED-PILOT"
+    name: "Benchmarked Pilot"
+    purpose: >
+      Pilot execution supported by measured latency, throughput,
+      utilization, reliability, and quality evidence.
+  - id: "TIER-PRODUCTION-ASSESSMENT"
+    name: "Production Assessment Candidate"
+    purpose: >
+      Formal architecture, security, compliance, capacity, and operational
+      assessment based on benchmark evidence.
+
+gpu_memory_classes:
+  - id: "MEMORY-SMALL"
+    name: "Small GPU memory class"
+    minimum_vram_gb: 0
+    maximum_vram_gb: 23.9999
+  - id: "MEMORY-MEDIUM"
+    name: "Medium GPU memory class"
+    minimum_vram_gb: 24
+    maximum_vram_gb: 47.9999
+  - id: "MEMORY-LARGE"
+    name: "Large GPU memory class"
+    minimum_vram_gb: 48
+    maximum_vram_gb: 79.9999
+  - id: "MEMORY-VERY-LARGE"
+    name: "Very large or multi-GPU memory class"
+    minimum_vram_gb: 80
+    maximum_vram_gb: null
+
+memory_estimation:
+  rule_id: "GP-MEMORY-001"
+  formula: >
+    parameter_count_billions * bytes_per_parameter * runtime_overhead_factor
+  precision_bytes_per_parameter:
+    fp32: 4.0
+    fp16: 2.0
+    bf16: 2.0
+    int8: 1.0
+    int4: 0.5
+  default_runtime_overhead_factor: 1.35
+  include_context_and_kv_cache_warning: true
+  include_framework_overhead_warning: true
+  estimate_label: "planning_estimate"
+
+infrastructure_tier_rules:
+  - rule_id: "GP-TIER-001"
+    target_tier: "TIER-EXPLORATION"
+    when:
+      benchmark_evidence: false
+      workload_definition_complete: false
+  - rule_id: "GP-TIER-002"
+    target_tier: "TIER-CONTROLLED-PROTOTYPE"
+    when:
+      workload_definition_complete: true
+      benchmark_evidence: false
+  - rule_id: "GP-TIER-003"
+    target_tier: "TIER-BENCHMARKED-PILOT"
+    when:
+      workload_definition_complete: true
+      benchmark_evidence: true
+      operational_targets_defined: true
+  - rule_id: "GP-TIER-004"
+    target_tier: "TIER-PRODUCTION-ASSESSMENT"
+    when:
+      workload_definition_complete: true
+      benchmark_evidence: true
+      operational_targets_defined: true
+      formal_reviews_required: true
+
+deployment_patterns:
+  - id: "PATTERN-SINGLE-NODE"
+    name: "Single-node controlled deployment"
+  - id: "PATTERN-MULTI-NODE"
+    name: "Multi-node scalable deployment"
+  - id: "PATTERN-SHARED-SERVING"
+    name: "Shared multi-model serving"
+  - id: "PATTERN-HYBRID"
+    name: "Hybrid deployment"
+  - id: "PATTERN-RESTRICTED-BOUNDARY"
+    name: "Restricted-data processing boundary"
+
+deployment_pattern_rules:
+  - rule_id: "GP-PATTERN-001"
+    target_pattern: "PATTERN-SINGLE-NODE"
+    when:
+      serving_pattern: "single_model"
+      scale_requirement: "bounded"
+  - rule_id: "GP-PATTERN-002"
+    target_pattern: "PATTERN-SHARED-SERVING"
+    when:
+      serving_pattern: "multi_model"
+  - rule_id: "GP-PATTERN-003"
+    target_pattern: "PATTERN-HYBRID"
+    when:
+      deployment_boundary: "hybrid"
+  - rule_id: "GP-PATTERN-004"
+    target_pattern: "PATTERN-RESTRICTED-BOUNDARY"
+    when:
+      data_sensitivity:
+        - "confidential"
+        - "restricted"
+
+planning_confidence:
+  levels:
+    - id: "GPU-CONFIDENCE-LOW"
+      name: "Low"
+    - id: "GPU-CONFIDENCE-MEDIUM"
+      name: "Medium"
+    - id: "GPU-CONFIDENCE-HIGH"
+      name: "High"
+  rules:
+    - rule_id: "GP-CONFIDENCE-001"
+      result: "GPU-CONFIDENCE-LOW"
+      when:
+        material_inputs_missing: true
+    - rule_id: "GP-CONFIDENCE-002"
+      result: "GPU-CONFIDENCE-MEDIUM"
+      when:
+        workload_definition_complete: true
+        benchmark_evidence: false
+    - rule_id: "GP-CONFIDENCE-003"
+      result: "GPU-CONFIDENCE-HIGH"
+      when:
+        workload_definition_complete: true
+        benchmark_evidence: true
+        benchmark_relevant: true
+        benchmark_reviewed: true
+  maximum_without_benchmark:
+    rule_id: "GP-CONFIDENCE-CAP-001"
+    maximum_level: "GPU-CONFIDENCE-MEDIUM"
+
+safeguards:
+  recommend_specific_gpu_product: false
+  make_purchase_recommendation: false
+  guarantee_performance: false
+  treat_estimates_as_benchmarks: false
+  require_material_assumptions_in_output: true
+  require_validation_action_in_output: true
+
+output:
+  include:
+    - "infrastructure_tier"
+    - "gpu_memory_class"
+    - "deployment_pattern"
+    - "gpu_planning_confidence"
+    - "material_assumptions"
+    - "planning_estimates"
+    - "confidence_reasons"
+    - "missing_inputs"
+    - "recommended_benchmark_action"
+    - "applied_rule_ids"
+    - "rule_set_version"
+
+validation:
+  reject_negative_numeric_inputs: true
+  reject_unknown_enumeration_values: true
+  reject_unknown_rule_references: true
+  require_model_license_status: true
+  require_deployment_boundary: true
+  validate_token_and_context_relationship: true

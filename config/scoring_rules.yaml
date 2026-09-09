@@ -1,0 +1,164 @@
+schema_version: "1.0"
+rule_set_version: "1.0"
+rule_set_name: "PARA-GIP Readiness Scoring and Classification Rules"
+
+description: >
+  Deterministic rules for calculating question scores, domain scores,
+  the overall readiness score, readiness classification, and
+  minimum-domain classification safeguards.
+
+dependencies:
+  assessment_catalog: "assessment_questions.yaml"
+
+score_range:
+  minimum: 0
+  maximum: 100
+
+maturity_credit_factors:
+  0: 0.00
+  1: 0.25
+  2: 0.50
+  3: 0.75
+  4: 1.00
+
+calculation:
+  question_score:
+    rule_id: "SC-QUESTION-001"
+    formula: "max_points * maturity_credit_factor"
+    description: >
+      Calculate the earned points for each question from its configured
+      maximum points and the selected maturity-level credit factor.
+
+  domain_score:
+    rule_id: "SC-DOMAIN-001"
+    formula: "sum(question_scores)"
+    description: >
+      Sum the earned question points within each readiness domain.
+
+  domain_percentage:
+    rule_id: "SC-DOMAIN-002"
+    formula: "(domain_score / domain_weight) * 100"
+    description: >
+      Express the domain result as a percentage of its available points.
+
+  overall_score:
+    rule_id: "SC-OVERALL-001"
+    formula: "sum(domain_scores)"
+    description: >
+      Sum all domain scores to produce the overall readiness score
+      on a scale from 0 to 100.
+
+precision:
+  internal_decimal_places: 4
+  display_decimal_places: 1
+  rounding_method: "half_up"
+  apply_classification_before_display_rounding: true
+
+classifications:
+  - id: "CLASS-DISCOVERY"
+    name: "Discovery Required"
+    minimum_score: 0
+    maximum_score: 39.9999
+    display_minimum: 0
+    display_maximum: 39
+    route: >
+      Define ownership, use case, data boundary, and risks.
+
+  - id: "CLASS-FOUNDATION"
+    name: "Foundation Required"
+    minimum_score: 40
+    maximum_score: 59.9999
+    display_minimum: 40
+    display_maximum: 59
+    route: >
+      Close critical gaps before technical deployment.
+
+  - id: "CLASS-CONTROLLED-PROTOTYPE"
+    name: "Ready for Controlled Prototype"
+    minimum_score: 60
+    maximum_score: 74.9999
+    display_minimum: 60
+    display_maximum: 74
+    route: >
+      Use synthetic or approved low-risk data.
+
+  - id: "CLASS-BENCHMARKED-PILOT"
+    name: "Ready for Benchmarked Pilot"
+    minimum_score: 75
+    maximum_score: 89.9999
+    display_minimum: 75
+    display_maximum: 89
+    route: >
+      Run a controlled pilot and collect measured evidence.
+
+  - id: "CLASS-PRODUCTION-ASSESSMENT"
+    name: "Candidate for Production Assessment"
+    minimum_score: 90
+    maximum_score: 100
+    display_minimum: 90
+    display_maximum: 100
+    route: >
+      Perform formal architecture, security, compliance,
+      and operational reviews.
+
+minimum_domain_rules:
+  - rule_id: "SC-CAP-CONTROLLED-PROTOTYPE"
+    target_classification: "CLASS-CONTROLLED-PROTOTYPE"
+    required_domain_percentage: 40
+    failure_cap: "CLASS-FOUNDATION"
+    explanation: >
+      Ready for Controlled Prototype requires every readiness
+      domain to achieve at least 40 percent of its available points.
+
+  - rule_id: "SC-CAP-BENCHMARKED-PILOT"
+    target_classification: "CLASS-BENCHMARKED-PILOT"
+    required_domain_percentage: 60
+    failure_cap: "CLASS-CONTROLLED-PROTOTYPE"
+    explanation: >
+      Ready for Benchmarked Pilot requires every readiness
+      domain to achieve at least 60 percent of its available points.
+
+  - rule_id: "SC-CAP-PRODUCTION-ASSESSMENT"
+    target_classification: "CLASS-PRODUCTION-ASSESSMENT"
+    required_domain_percentage: 75
+    failure_cap: "CLASS-BENCHMARKED-PILOT"
+    explanation: >
+      Candidate for Production Assessment requires every readiness
+      domain to achieve at least 75 percent of its available points.
+
+classification_processing:
+  rule_id: "SC-CLASSIFICATION-001"
+  sequence:
+    - "calculate_question_scores"
+    - "calculate_domain_scores"
+    - "calculate_domain_percentages"
+    - "calculate_overall_score"
+    - "assign_score_band_classification"
+    - "apply_minimum_domain_rules"
+    - "retain_internal_precision"
+    - "round_values_for_display"
+
+  preserve_uncapped_classification: true
+  preserve_applied_caps: true
+  preserve_rule_ids: true
+
+output:
+  include:
+    - "question_scores"
+    - "domain_scores"
+    - "domain_percentages"
+    - "overall_score"
+    - "score_band_classification"
+    - "final_classification"
+    - "applied_caps"
+    - "calculation_explanation"
+    - "applied_rule_ids"
+    - "rule_set_version"
+
+validation:
+  require_all_questions_answered: true
+  reject_unknown_question_ids: true
+  reject_duplicate_question_ids: true
+  reject_maturity_levels_outside_range: true
+  verify_domain_weights_total: 100
+  verify_score_range: true
